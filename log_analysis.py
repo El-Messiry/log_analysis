@@ -26,29 +26,40 @@ top_log_articles_q = \
         GROUP BY path ORDER BY num DESC;
     """
 # Creating View in DB
-mydb.db_create_view("top3_log_articles", top_log_articles_q)
+mydb.db_create_view("top_log_articles", top_log_articles_q)
 
 
 top_articles_q = \
     """
         SELECT log.path,log.num,a.title,a.author FROM
         (SELECT * FROM top_log_articles) AS log ,articles AS a
-        WHERE log.path LIKE '%' ||a.slug || '%' ;
+        WHERE log.path = '/article/' || a.slug ;
     """
 # Creating View in DB
 mydb.db_create_view("top_articles", top_articles_q)
 
 
-# ---------------- Top Authors Views -----------------------#
-
-top_author_q = \
+top_articles_authors_q = \
     """
-        SELECT top.title,top.num AS view_num ,a.name
+        SELECT top.title, top.num AS view_num ,a.name
         FROM (SELECT * FROM top_articles) AS top, authors AS a
         WHERE top.author=a.id;
     """
 # Creating View in DB
-mydb.db_create_view("top_articles_authors", top_author_q)
+mydb.db_create_view("top_articles_authors", top_articles_authors_q)
+
+
+# ---------------- Top Authors Views -----------------------#
+
+top_authors_q = \
+    """
+        SELECT a.name , SUM(top.num) as view_num
+        FROM (SELECT * FROM top_articles) AS top, authors AS a
+        WHERE top.author=a.id
+        GROUP BY a.name ORDER BY view_num DESC;
+    """
+# Creating View in DB
+mydb.db_create_view("top_authors", top_authors_q)
 
 
 # ---------------- FAIL % Views ----------------------------#
@@ -97,7 +108,7 @@ mydb.db_create_view("status_analysis", suc_err)
 
 def get_top_articles(condition_q=0):
     # Fetching View from DB
-    return mydb.db_fetch_view(view_name="top_articles",
+    return mydb.db_fetch_view(view_name="top_articles_authors",
                               condition_q=condition_q)
 
 
@@ -108,7 +119,7 @@ def get_top_articles(condition_q=0):
 
 def get_top_authors(condition_q=0):
     # Fetching View from DB
-    return mydb.db_fetch_view(view_name="top_articles_authors",
+    return mydb.db_fetch_view(view_name="top_authors",
                               condition_q=condition_q)
 
 
@@ -125,23 +136,33 @@ def get_fail_percentage(condition_q):
 # Printing Results
 # ----------------------------------------------------------#
 
-print("Top Articles & Authors :\n")
 
-# Top authors also fetches the article title & view number
-# Printing top articles and authors
-for article in get_top_authors(condition_q="LIMIT 3"):
-    print("Article :'" + article[0] + "'\n" +
-          "By      : " + str(article[1]) + "\n" +
-          "Views   : " + str(article[2]) + "\n" +
-          "----------------------------------------------\n")
+def print_report():
+    print("Top Articles:\n")
+    # Printing top articles and corresponding authors
+    for article in get_top_articles(condition_q="LIMIT 3"):
+        print("Article :'" + article[0] + "'\n" +
+              "By      : " + str(article[2]) + "\n" +
+              "Views   : " + str(article[1]) + "\n" +
+              "----------------------------------------------")
 
-print("Fail Percentage : \n")
-# printing Fail percentage
-for item in get_fail_percentage("WHERE percent > 1"):
-    print("Date: "+str(item[0]))
-    print("Total status code 404: " + str(item[1]))
-    print("Total Responses      : " + str(item[2]))
-    print("Percentage of Failure: " + str(item[3])+" %")
+    print("\nTop Author:\n")
+    for author in get_top_authors("LIMIT 3"):
+        print("Author :" + author[0] + "\n" +
+              "Views  :" + str(author[1]) + "\n" +
+              "----------------------------------------------")
+
+    print("\nFail Percentage : \n")
+    # printing Fail percentage
+    for item in get_fail_percentage("WHERE percent > 1"):
+        print("Date: {0:%B %d, %Y}".format(item[0]))
+        print("Total Responses : " + str(item[2]))
+        print("Total status code 404: " + str(item[1]))
+        print("Percentage of Failure: " + str(item[3])+" %")
+
+    print("\n\n---------------- Report Done -----------------")
 
 if __name__ == "__main__":
+    print_report()
     pass
+

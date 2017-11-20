@@ -2,8 +2,9 @@
 
 ### Description:
 This is Log Analysis project (#3) of Udacity Full Stack Webdevelopment .
-Given 3 question to answer using SQL Queries :
+Having large database it's required to fetch data effeciently from the Database `postgresql` and to benefit from the power of SQL queries and reduce Python code as much as possible 
 
+Given 3 question to answer using SQL Queries :
 - What are the most popular three articles of all time?
 - Who are the most popular article authors of all time? 
 - On which days did more than 1% of requests lead to errors? 
@@ -18,24 +19,20 @@ Contains all the helping functions regarding interacting with `newsdata` Databas
 
 ### Walk Through:
 **A)`log_analysis.py`** 
-1- Deletes all the Views used in queries from DB
-2- Deletes Table Views then Creates it again
->1 & 2 are just measures to gurantee program should run again and again with out errors like: ( relation already exists , table already exists etc....)
 
-3- SQL Query to Fetch most read articles & creates view of it in DB
-4- Based on step 3 , it Fetches the Authors name of each article 
-5- Aggregating the total error `404 NOT FOUND`,`200 OK` and grouping by Date and storing it in a view .
-6-By using the 2 views above we Create a new table with percantage of Failure .
-7-Printing the Results of the 3 Questions .
+
+1. First it connects to Database
+2. Then it creates all the views of the queries needed
+3. After all the Queries been added as view we embed them in functions
+4. these functions return required information
+5. Printing the Results 
 
 
 **B) `db_helpers.py`**
 Contains Class `my_database()` which inherits from the `psycopg2` to interact with any given database .
 
-- The constructor takes only the database name which you'd like to connect to , in `log_analysis.py` ex:
+- The constructor takes only the database name which you'd like to connect to , in `log_analysis.py` 
 
-		DB = "newsdata"
-		mydb = my_database(DB) 
 	
 
 - having `mydb` instance that is connected to `newsdata` database you can access all the functions inside.
@@ -45,3 +42,29 @@ Contains Class `my_database()` which inherits from the `psycopg2` to interact wi
 
 - `db_create_view()` to create view query to the Database 
 - `db_fetch_view()`to fetch the created view 
+
+### Useage :
+
+1. First download and install the following :
+	- download and install postgresql from [here](http://postgresguide.com/setup/install.html) 
+	- download database , zipped file from [here](https://d17h27t6h515a5.cloudfront.net/topher/2016/August/57b5f748_newsdata/newsdata.zip) 
+	- unzipp the file `neswdata.sql` and copy it to your Database
+	- this [link](https://www.postgresql.org/docs/8.1/static/backup.html) should help with copying the database
+	
+2. In **`log_analysis.py`** please specify your Database name
+ex:
+	
+		# Please specify your Database name
+		DB = "newsdata"
+		mydb = my_database(DB)
+		
+3. after connecting to your Database , use your instance to create your desired queries 
+		
+		mydb.db_create_view("top_articles", top_articles_q)
+		# create view in database 		
+		
+4. Creating view queries Easy up the process of fetching data
+5. After you make your queries using functions from **`db_helpers`**
+6. print your results
+
+		print_report()

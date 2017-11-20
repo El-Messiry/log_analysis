@@ -10,6 +10,7 @@ import psycopg2
 # the following inheritance is gladly From StackOverFlow
 # without it , it would pass an error ( 3 args given )
 
+
 class my_database(psycopg2.extensions.connection):
     '''
         Class my database
@@ -24,14 +25,10 @@ class my_database(psycopg2.extensions.connection):
 
     def connect_db(self):
         """ Opening Database connection """
-        try:
-            db = psycopg2.connect(database=self.dbname)
-            cursor = db.cursor()
-            return cursor, db
-            # returning cursor "cursor" and Database instance "db"
-        except:
-            # Error msg should be raised.
-            return 0, 0
+
+        db = psycopg2.connect(database=self.dbname)
+        cursor = db.cursor()
+        return cursor, db
 
     def close_db(self, db):
         """
@@ -51,15 +48,12 @@ class my_database(psycopg2.extensions.connection):
         if not c or not db:
             print("ERROR: Couldn't connect to DB")
             return   # Error msg should be raised.
-        try:
-            if not condition:
-                c.execute(query)
-            else:
-                c.execute(query, condition)
-            result = c.fetchall()
-        except:
-            result = 'empty'
-            print("ERROR: Read from DB Failed")
+
+        if not condition:
+            c.execute(query)
+        else:
+            c.execute(query, condition)
+        result = c.fetchall()
 
         self.close_db(db)
         return result
@@ -78,12 +72,8 @@ class my_database(psycopg2.extensions.connection):
             print("ERROR: Couldn't connect to DB")
             return   # Error msg should be raised.
 
-        try:
-            c.execute(query)
-            db.commit()
-        except:
-            print("ERROR: Modifying DB Failed")
-            db.rollback()
+        c.execute(query)
+        db.commit()
 
         self.close_db(db)
         return
@@ -101,11 +91,8 @@ class my_database(psycopg2.extensions.connection):
             return   # Error msg should be raised.
         view_query = ("CREATE OR REPLACE VIEW " + view_name + " AS "+query)
 
-        try:
-            c.execute(view_query)
-            db.commit()
-        except:
-            print("ERROR: Create view failed")
+        c.execute(view_query)
+        db.commit()
 
         self.close_db(db)
         return
@@ -125,3 +112,4 @@ class my_database(psycopg2.extensions.connection):
         else:
             query = "SELECT * FROM " + view_name+" ;"
         return self.db_read(query)
+
